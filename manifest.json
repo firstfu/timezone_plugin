@@ -6,7 +6,8 @@
     "permissions": [
         "storage",
         "tabs",
-        "debugger"
+        "debugger",
+        "notifications"
     ],
     "host_permissions": [
         "<all_urls>"
@@ -16,5 +17,13 @@
     },
     "background": {
         "service_worker": "background.js"
+    },
+    "commands": {
+        "_execute_action": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+H",
+                "mac": "Command+Shift+H"
+            }
+        }
     }
 }
