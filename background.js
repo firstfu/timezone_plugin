@@ -22,40 +22,68 @@ chrome.storage.onChanged.addListener(function (changes, namespace) {
         chrome.scripting.executeScript({
           target: { tabId: tab.id },
           func: timezone => {
-            // 覆蓋原生的 Date 對象
-            const originalDate = Date;
-            const originalToString = Date.prototype.toString;
-            const originalGetTimezoneOffset = Date.prototype.getTimezoneOffset;
+            // 保存原始的 Date 構造函數
+            const OriginalDate = Date;
 
-            // 計算時區偏移
-            const offset = (() => {
-              const date = new originalDate();
-              const timeString = date.toLocaleString("en-US", { timeZone: timezone });
-              const localTime = new originalDate(timeString);
-              return (date - localTime) / 60000;
-            })();
+            // 創建新的 Date 構造函數
+            function CustomDate(...args) {
+              // 如果沒有參數，使用當前時區的時間
+              if (args.length === 0) {
+                const now = new OriginalDate();
+                const tzTime = now.toLocaleString("en-US", { timeZone: timezone });
+                return new OriginalDate(tzTime);
+              }
 
-            // 修改 Date.prototype.getTimezoneOffset
-            Date.prototype.getTimezoneOffset = function () {
-              return offset;
+              // 如果有參數，正常創建
+              const instance = new OriginalDate(...args);
+              return instance;
+            }
+
+            // 繼承原始 Date 的所有靜態屬性和方法
+            Object.setPrototypeOf(CustomDate, OriginalDate);
+            CustomDate.prototype = Object.create(OriginalDate.prototype);
+            CustomDate.prototype.constructor = CustomDate;
+
+            // 重寫 toString 方法
+            CustomDate.prototype.toString = function () {
+              const date = new OriginalDate(this.valueOf());
+              const options = {
+                timeZone: timezone,
+                hour12: false,
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                timeZoneName: "long",
+              };
+
+              return date.toLocaleString("en-US", options);
             };
 
-            // 修改 Date.prototype.toString
-            Date.prototype.toString = function () {
-              return this.toLocaleString("en-US", { timeZone: timezone });
+            // 重寫 toLocaleString 方法
+            CustomDate.prototype.toLocaleString = function (locale = "en-US", options = {}) {
+              options.timeZone = timezone;
+              return OriginalDate.prototype.toLocaleString.call(this, locale, options);
             };
 
-            // 修改 console.log 的時間顯示
-            const originalConsoleLog = console.log;
-            console.log = function (...args) {
-              args = args.map(arg => {
-                if (arg instanceof Date) {
-                  return new Date(arg.toLocaleString("en-US", { timeZone: timezone }));
-                }
-                return arg;
-              });
-              originalConsoleLog.apply(console, args);
+            // 重寫 getTimezoneOffset 方法
+            CustomDate.prototype.getTimezoneOffset = function () {
+              const date = new OriginalDate();
+              const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+              const tzDate = new OriginalDate(date.toLocaleString("en-US", { timeZone: timezone }));
+              return (utc - tzDate.getTime()) / 60000;
             };
+
+            // 替換全局的 Date 對象
+            window.Date = CustomDate;
+
+            console.log(`Timezone successfully set to: ${timezone}`);
+            // 打印本地時間以驗證時區切換
+            const localTime = new Date().toString();
+            console.log("Current local time:", localTime);
           },
           args: [newTimezone],
         });
