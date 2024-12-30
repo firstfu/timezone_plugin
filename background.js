@@ -1,100 +1,60 @@
-// 監聽安裝事件
-chrome.runtime.onInstalled.addListener(function () {
-  // 初始化存儲
-  chrome.storage.sync.get(["timezone", "favorites"], function (result) {
-    if (!result.timezone) {
-      chrome.storage.sync.set({
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        favorites: [],
-      });
-    }
-  });
-});
+// 獲取當前系統時區偏移
+const systemOffset = new Date().getTimezoneOffset();
 
-// 監聽時區變更
-chrome.storage.onChanged.addListener(function (changes, namespace) {
-  if (namespace === "sync" && changes.timezone) {
-    const newTimezone = changes.timezone.newValue;
-    // 獲取所有標籤頁
-    chrome.tabs.query({}, function (tabs) {
-      tabs.forEach(function (tab) {
-        // 對每個標籤頁注入時區設置腳本
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          func: timezone => {
-            // 保存原始的 Date 構造函數
-            const OriginalDate = Date;
-
-            // 創建新的 Date 構造函數
-            function CustomDate(...args) {
-              // 如果沒有參數，使用當前時區的時間
-              if (args.length === 0) {
-                const now = new OriginalDate();
-                const tzTime = now.toLocaleString("en-US", { timeZone: timezone });
-                return new OriginalDate(tzTime);
-              }
-
-              // 如果有參數，正常創建
-              const instance = new OriginalDate(...args);
-              return instance;
-            }
-
-            // 繼承原始 Date 的所有靜態屬性和方法
-            Object.setPrototypeOf(CustomDate, OriginalDate);
-            CustomDate.prototype = Object.create(OriginalDate.prototype);
-            CustomDate.prototype.constructor = CustomDate;
-
-            // 重寫 toString 方法
-            CustomDate.prototype.toString = function () {
-              const date = new OriginalDate(this.valueOf());
-              const options = {
-                timeZone: timezone,
-                hour12: false,
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                timeZoneName: "long",
-              };
-
-              return date.toLocaleString("en-US", options);
-            };
-
-            // 重寫 toLocaleString 方法
-            CustomDate.prototype.toLocaleString = function (locale = "en-US", options = {}) {
-              options.timeZone = timezone;
-              return OriginalDate.prototype.toLocaleString.call(this, locale, options);
-            };
-
-            // 重寫 getTimezoneOffset 方法
-            CustomDate.prototype.getTimezoneOffset = function () {
-              const date = new OriginalDate();
-              const utc = date.getTime() + date.getTimezoneOffset() * 60000;
-              const tzDate = new OriginalDate(date.toLocaleString("en-US", { timeZone: timezone }));
-              return (utc - tzDate.getTime()) / 60000;
-            };
-
-            // 替換全局的 Date 對象
-            window.Date = CustomDate;
-
-            console.log(`Timezone successfully set to: ${timezone}`);
-            // 打印本地時間以驗證時區切換
-            const localTime = new Date().toString();
-            console.log("Current local time:", localTime);
-          },
-          args: [newTimezone],
-        });
-      });
-    });
+// 監聽來自內容腳本的消息
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.op === "GetTimezoneSettings") {
+    getTimezoneSettings().then(sendResponse);
+    return true; // 保持消息通道開啟
   }
 });
 
-// 監聽快捷鍵
-chrome.commands.onCommand.addListener(function (command) {
-  if (command === "_execute_action") {
-    chrome.action.openPopup();
+// 獲取時區設定
+async function getTimezoneSettings() {
+  const { targetTimezone, enabled } = await chrome.storage.local.get(["targetTimezone", "enabled"]);
+
+  if (!enabled) {
+    return null;
+  }
+
+  // 如果沒有設定目標時區，使用預設值
+  const timezone = targetTimezone || "UTC";
+  const offset = getTimezoneOffset(timezone);
+  const timezoneName = getTimezoneName(timezone);
+
+  return [
+    timezone, // 時區標識符
+    offset, // 目標時區的偏移量（分鐘）
+    systemOffset, // 系統時區的偏移量（分鐘）
+    timezoneName, // 時區顯示名稱
+  ];
+}
+
+// 獲取時區偏移量（分鐘）
+function getTimezoneOffset(timezone) {
+  const date = new Date();
+  const targetTime = new Date(date.toLocaleString("en-US", { timeZone: timezone }));
+  const targetOffset = (targetTime - date) / (60 * 1000);
+  return targetOffset;
+}
+
+// 獲取時區顯示名稱
+function getTimezoneName(timezone) {
+  try {
+    const options = { timeZoneName: "long", timeZone: timezone };
+    return new Date().toLocaleString("en-US", options).split(" (")[1].slice(0, -1);
+  } catch (e) {
+    return timezone;
+  }
+}
+
+// 初始化設定
+chrome.runtime.onInstalled.addListener(async () => {
+  const { targetTimezone } = await chrome.storage.local.get("targetTimezone");
+  if (!targetTimezone) {
+    await chrome.storage.local.set({
+      targetTimezone: "UTC",
+      enabled: true,
+    });
   }
 });
