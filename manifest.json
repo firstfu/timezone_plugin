@@ -1,34 +1,37 @@
 {
     "manifest_version": 3,
-    "name": "Timezone Switcher",
-    "version": "1.0",
-    "description": "快速切換 Chrome 瀏覽器時區，提升開發測試效率",
+    "name": "Timezone Converter",
+    "version": "1.0.0",
+    "description": "A Chrome extension for timezone conversion",
     "permissions": [
-        "storage",
-        "scripting",
-        "tabs"
-    ],
-    "host_permissions": [
-        "<all_urls>"
+        "storage"
     ],
     "action": {
-        "default_popup": "popup.html",
-        "default_icon": "icons/icon48.png"
+        "default_popup": "popup.html"
     },
     "background": {
-        "service_worker": "background.js",
-        "type": "module"
+        "service_worker": "background.js"
     },
-    "icons": {
-        "48": "icons/icon48.png"
-    },
-    "commands": {
-        "_execute_action": {
-            "suggested_key": {
-                "default": "Ctrl+Shift+T",
-                "mac": "Command+Shift+T"
-            },
-            "description": "開啟時區切換器"
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "inject.js"
+            ],
+            "run_at": "document_start",
+            "all_frames": true
         }
-    }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "inject-content.js"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ]
 }

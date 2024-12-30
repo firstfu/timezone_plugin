@@ -1,0 +1,84 @@
+ <!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Change Timezone</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+  </head>
+  <style type="text/css">
+    input[type=text] {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .note {
+      color: #5d5d5d;
+      padding-bottom: 10px;
+    }
+    body{padding:10px; width: 450px;}
+    h3{text-align: center;}
+  </style>
+  <body>
+    <h3>Change Timezone</h3>
+    <hr>
+    <form>
+      <table width="100%">
+        <tbody>
+          <tr>
+            <td>Timezone:</td>
+            <td>
+              <select class="form-control" id="offset"></select>
+            </td>
+          </tr>
+          <tr>
+            <td class="note" colspan="2">Select a timezone</td>
+          </tr>
+          <tr>
+            <td>Offset:</td>
+            <td><input class="form-control" type="number" id="minutes" required></td>
+          </tr>
+          <tr>
+            <td class="note" colspan="2">Time zone difference from UTC (in minutes) (with daylight consideration)</td>
+          </tr>
+          <tr >
+            <td style="display: none;">Daylight:</td>
+            <td style="display: none;"><input  class="form-control" type="text" id="daylight" required></td>
+          </tr>
+          <tr>
+            <td style="display: none;" class="note" colspan="2">Daylight's "toString()" message</td>
+          </tr>
+          <tr>
+            <td style="display: none;">Standard:</td>
+            <td><input style="display: none;" class="form-control" type="text" id="standard" required></td>
+          </tr>
+          <tr>
+            <td style="display: none;" class="note" colspan="2">Standard's "toString()" message</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td id="gmt"></td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <label><input    type="checkbox" id="update"> Automatically update timezone based on my IP address</label>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2"><input  type="checkbox" id="random" value="true"> Pick a random time zone</td>
+          </tr>
+        </tbody>
+      </table>
+      <br>  
+      <p>
+        <a class="btn btn-danger" href="https://webbrowsertools.com/timezone/" target="_blank">Check Timezone</a>
+        <button class="btn btn-primary" value="Reset" id="reset"> Reset </button>
+         <button class="btn btn-primary" type="submit" value="Save"> Save </button>
+         <a href="#" id="teaser" class="btn btn-warning teaser" target="_blank">Please Rate Us</a>
+        <span id="toast"></span>
+      </p>
+    </form>
+
+    <script src="../offsets.js"></script>
+    <script src="index.js"></script>
+    <script src="rate.js"></script>
+  </body>
+</html>

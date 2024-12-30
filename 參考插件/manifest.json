@@ -1,0 +1,47 @@
+{
+   "action": {
+      "default_icon": {
+         "128": "data/icons/icon-128.png",
+         "16": "data/icons/icon-16.png",
+         "256": "data/icons/icon-256.png",
+         "32": "data/icons/icon-32.png",
+         "48": "data/icons/icon-48.png",
+         "512": "data/icons/icon-512.png",
+         "64": "data/icons/icon-64.png"
+      },
+      "default_popup": "data/popup/index.html"
+   },
+   "background": {
+      "service_worker": "/js/bg-worker.js"
+   },
+   "content_scripts": [ {
+      "all_frames": true,
+      "js": [ "data/inject.js" ],
+      "match_about_blank": true,
+      "matches": [ "*://*/*" ],
+      "run_at": "document_start"
+   } ],
+   "default_locale": "en",
+   "description": "__MSG_application_description__",
+   "homepage_url": "https://change-timezone.pdfwork.com/",
+   "icons": {
+      "128": "data/icons/icon-128.png",
+      "16": "data/icons/icon-16.png",
+      "256": "data/icons/icon-256.png",
+      "32": "data/icons/icon-32.png",
+      "48": "data/icons/icon-48.png",
+      "512": "data/icons/icon-512.png",
+      "64": "data/icons/icon-64.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsAn11o93nhd75EAU71T80/6SPEuKEOIhPZhidUQfgTgtpouTkHx20km3G+M6uqZ0q0mJCmt9KL69Oa0TW6KzeTBHcjdls6eVGvfxLtW+E8wMLJeutEkODVFErm0ZL2b24j8ik6oe1lJAYNd9oNqgJCmk7BftDlf5DcgCEA+g22E+sM9qUE7XRL1UY7/em1UK59RZLzVj/JPftTkpR56g/f9yznWrFdNis3GLTz5EkQCA1czz2QEf6RGoroJklNwpugVQ3uQcBXJRrXISu2qElgUqCg9xB9PFXV9TIPIHmOtzATxySBTJt8UUaUYXGHwBGXMRvg41ZADIX0Xs44ZraQIDAQAB",
+   "manifest_version": 3,
+   "name": "__MSG_application_title__",
+   "offline_enabled": true,
+   "permissions": [ "storage" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "3.0.0",
+   "web_accessible_resources": [ {
+      "matches": [ "\u003Call_urls>" ],
+      "resources": [ "/data/inject-content.js" ]
+   } ]
+}
